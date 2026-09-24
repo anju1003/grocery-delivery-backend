@@ -1,0 +1,272 @@
+{
+  "info": {
+    "name": "P19 - Online Grocery Delivery Platform",
+    "description": "Postman collection for the Grocery Delivery Platform backend (CIA-3, Christ University).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "storeId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "deliveryPartnerId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Asha Rao\",\n  \"email\": \"asha@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"9876543210\",\n  \"role\": \"customer\",\n  \"serviceableArea\": \"Indiranagar\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Store Staff",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Staff\",\n  \"email\": \"ravi.staff@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"storeStaff\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Delivery Partner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kiran Partner\",\n  \"email\": \"kiran.partner@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"deliveryPartner\",\n  \"serviceableArea\": \"Indiranagar\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"asha@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dark Stores",
+      "item": [
+        {
+          "name": "Create Store (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/darkstores",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Indiranagar Dark Store\",\n  \"area\": \"Indiranagar\",\n  \"location\": { \"lat\": 12.9716, \"lng\": 77.6412 }\n}"
+            }
+          }
+        },
+        {
+          "name": "List Stores",
+          "request": { "method": "GET", "url": "{{baseUrl}}/darkstores?area=Indiranagar" }
+        },
+        {
+          "name": "Get Store By Id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/darkstores/{{storeId}}" }
+        },
+        {
+          "name": "Update Store (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/darkstores/{{storeId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Indiranagar Dark Store - Updated\"\n}" }
+          }
+        },
+        {
+          "name": "Deactivate Store (Admin)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/darkstores/{{storeId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Products & Stock",
+      "item": [
+        {
+          "name": "Create Product (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amul Toned Milk 500ml\",\n  \"category\": \"Dairy\",\n  \"price\": 28,\n  \"unit\": \"pc\",\n  \"description\": \"Fresh toned milk pouch\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Products (by store)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products?storeId={{storeId}}" }
+        },
+        {
+          "name": "Update Product (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/products/{{productId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 30\n}" }
+          }
+        },
+        {
+          "name": "Upsert Store Stock (Admin/Staff)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/products/stock",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 100,\n  \"reorderPoint\": 15\n}"
+            }
+          }
+        },
+        {
+          "name": "Low Stock Alerts (Admin/Staff)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products/low-stock?storeId={{storeId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productId\": \"{{productId}}\", \"quantity\": 2 }\n  ],\n  \"deliveryAddress\": \"12, 100ft Road, Indiranagar\",\n  \"deliverySlot\": { \"date\": \"2026-09-25\", \"window\": \"6pm-8pm\" }\n}"
+            }
+          }
+        },
+        {
+          "name": "My Orders (Customer)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/orders/my" }
+        },
+        {
+          "name": "Store Orders (Admin/Staff)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/orders/store?storeId={{storeId}}&status=placed" }
+        },
+        {
+          "name": "Get Order By Id (Real-Time Status)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/orders/{{orderId}}" }
+        },
+        {
+          "name": "Start Picking (Staff)",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/orders/{{orderId}}/pick" }
+        },
+        {
+          "name": "Mark Packed (Staff)",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/orders/{{orderId}}/pack" }
+        },
+        {
+          "name": "Assign Delivery Partner (Staff)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}/assign",
+            "body": { "mode": "raw", "raw": "{\n  \"deliveryPartnerId\": \"{{deliveryPartnerId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Update Delivery Status - Out for Delivery (Partner)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"out_for_delivery\"\n}" }
+          }
+        },
+        {
+          "name": "Update Delivery Status - Delivered (Partner)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"delivered\", \"note\": \"Left at door\"\n}" }
+          }
+        },
+        {
+          "name": "Reorder (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}/reorder",
+            "body": { "mode": "raw", "raw": "{}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery Partners",
+      "item": [
+        {
+          "name": "Available Partners (Admin/Staff)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/delivery-partners/available?area=Indiranagar" }
+        },
+        {
+          "name": "My Partner Profile (Delivery Partner)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/delivery-partners/me" }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Store/Delivery Performance (Admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/reports/performance" }
+        }
+      ]
+    }
+  ]
+}

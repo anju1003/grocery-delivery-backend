@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grocery Delivery — Demo</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background:#f7f9fb; }
+  .card { border-radius: 14px; }
+  pre { background:#0f172a; color:#e2e8f0; padding:12px; border-radius:8px; max-height:260px; overflow:auto; font-size:12px;}
+  .badge-status { text-transform: capitalize; }
+  nav.navbar { background: linear-gradient(90deg,#16a34a,#15803d); }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+  <div class="container">
+    <span class="navbar-brand mb-0 h1">🛒 Grocery Delivery — Live Demo</span>
+    <span id="whoami" class="text-white small"></span>
+  </div>
+</nav>
+
+<div class="container pb-5">
+
+  <!-- Auth -->
+  <div class="card mb-4 p-3">
+    <h5>1. Login / Register</h5>
+    <div class="row g-2">
+      <div class="col-md-3"><input id="regName" class="form-control" placeholder="Name (register only)"></div>
+      <div class="col-md-3"><input id="authEmail" class="form-control" placeholder="Email"></div>
+      <div class="col-md-2"><input id="authPass" class="form-control" placeholder="Password" type="password"></div>
+      <div class="col-md-2">
+        <select id="authRole" class="form-select">
+          <option value="customer">customer</option>
+          <option value="admin">admin</option>
+          <option value="storeStaff">storeStaff</option>
+          <option value="deliveryPartner">deliveryPartner</option>
+        </select>
+      </div>
+      <div class="col-md-1 d-grid"><button class="btn btn-success" onclick="register()">Sign up</button></div>
+      <div class="col-md-1 d-grid"><button class="btn btn-outline-success" onclick="login()">Login</button></div>
+    </div>
+  </div>
+
+  <!-- Admin setup -->
+  <div class="card mb-4 p-3">
+    <h5>2. Admin quick setup</h5>
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3"><label class="form-label small">Store name</label><input id="storeName" class="form-control" value="Indiranagar Dark Store"></div>
+      <div class="col-md-2"><label class="form-label small">Area</label><input id="storeArea" class="form-control" value="Indiranagar"></div>
+      <div class="col-md-2 d-grid"><button class="btn btn-primary" onclick="createStore()">Create Store</button></div>
+      <div class="col-md-3"><label class="form-label small">Product name / price</label>
+        <div class="input-group"><input id="prodName" class="form-control" value="Amul Milk 500ml"><input id="prodPrice" class="form-control" value="28" style="max-width:80px"></div>
+      </div>
+      <div class="col-md-2 d-grid"><button class="btn btn-primary" onclick="createProduct()">Create Product</button></div>
+    </div>
+    <div class="row g-2 mt-1 align-items-end">
+      <div class="col-md-3"><label class="form-label small">Stock qty</label><input id="stockQty" class="form-control" value="100"></div>
+      <div class="col-md-2 d-grid"><button class="btn btn-outline-primary" onclick="setStock()">Set Stock</button></div>
+      <div class="col-md-7 small text-muted align-self-center">storeId: <span id="storeIdShown">-</span> | productId: <span id="productIdShown">-</span></div>
+    </div>
+  </div>
+
+  <!-- Customer -->
+  <div class="card mb-4 p-3">
+    <h5>3. Customer — place order</h5>
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4"><label class="form-label small">Delivery address</label><input id="deliveryAddr" class="form-control" value="12, 100ft Road, Indiranagar"></div>
+      <div class="col-md-2"><label class="form-label small">Qty</label><input id="orderQty" class="form-control" value="2"></div>
+      <div class="col-md-2 d-grid"><button class="btn btn-success" onclick="placeOrder()">Place Order</button></div>
+      <div class="col-md-4 small text-muted align-self-center">orderId: <span id="orderIdShown">-</span></div>
+    </div>
+  </div>
+
+  <!-- Staff / Delivery workflow -->
+  <div class="card mb-4 p-3">
+    <h5>4. Staff & Delivery workflow</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-secondary" onclick="orderAction('pick')">Start Picking</button>
+      <button class="btn btn-sm btn-secondary" onclick="orderAction('pack')">Mark Packed</button>
+      <button class="btn btn-sm btn-secondary" onclick="listPartners()">List Available Partners</button>
+      <button class="btn btn-sm btn-secondary" onclick="assignPartner()">Assign Partner</button>
+      <button class="btn btn-sm btn-secondary" onclick="setStatus('out_for_delivery')">Out for Delivery</button>
+      <button class="btn btn-sm btn-secondary" onclick="setStatus('delivered')">Mark Delivered</button>
+      <button class="btn btn-sm btn-outline-dark" onclick="getOrder()">Refresh Order Status</button>
+    </div>
+    <div id="statusBadge" class="mt-2"></div>
+  </div>
+
+  <div class="card p-3">
+    <h5>API Response Log</h5>
+    <pre id="log">Ready.</pre>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let token = '', role = '', storeId = '', productId = '', orderId = '', deliveryPartnerId = '';
+
+function log(label, data) {
+  document.getElementById('log').textContent = `[${label}]\n` + JSON.stringify(data, null, 2);
+}
+
+async function api(method, path, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json();
+  log(`${method} ${path}`, data);
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data.data;
+}
+
+async function register() {
+  try {
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPass').value;
+    const roleVal = document.getElementById('authRole').value;
+    const data = await api('POST', '/auth/register', { name, email, password, role: roleVal, serviceableArea: 'Indiranagar' });
+    token = data.token; role = data.user.role;
+    document.getElementById('whoami').textContent = `${data.user.name} (${role})`;
+  } catch (e) { alert(e.message); }
+}
+
+async function login() {
+  try {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPass').value;
+    const data = await api('POST', '/auth/login', { email, password });
+    token = data.token; role = data.user.role;
+    document.getElementById('whoami').textContent = `${data.user.name} (${role})`;
+  } catch (e) { alert(e.message); }
+}
+
+async function createStore() {
+  try {
+    const name = document.getElementById('storeName').value;
+    const area = document.getElementById('storeArea').value;
+    const data = await api('POST', '/darkstores', { name, area });
+    storeId = data._id;
+    document.getElementById('storeIdShown').textContent = storeId;
+  } catch (e) { alert(e.message); }
+}
+
+async function createProduct() {
+  try {
+    const name = document.getElementById('prodName').value;
+    const price = Number(document.getElementById('prodPrice').value);
+    const data = await api('POST', '/products', { name, category: 'Grocery', price });
+    productId = data._id;
+    document.getElementById('productIdShown').textContent = productId;
+  } catch (e) { alert(e.message); }
+}
+
+async function setStock() {
+  try {
+    const quantity = Number(document.getElementById('stockQty').value);
+    await api('POST', '/products/stock', { storeId, productId, quantity, reorderPoint: 15 });
+  } catch (e) { alert(e.message); }
+}
+
+async function placeOrder() {
+  try {
+    const deliveryAddress = document.getElementById('deliveryAddr').value;
+    const quantity = Number(document.getElementById('orderQty').value);
+    const data = await api('POST', '/orders', {
+      items: [{ productId, quantity }],
+      deliveryAddress,
+      storeId,
+      deliverySlot: { date: '2026-09-25', window: '6pm-8pm' }
+    });
+    orderId = data._id;
+    document.getElementById('orderIdShown').textContent = orderId;
+    document.getElementById('statusBadge').innerHTML = `<span class="badge bg-info badge-status">${data.status}</span>`;
+  } catch (e) { alert(e.message); }
+}
+
+async function orderAction(action) {
+  try {
+    const data = await api('PUT', `/orders/${orderId}/${action}`);
+    document.getElementById('statusBadge').innerHTML = `<span class="badge bg-info badge-status">${data.status}</span>`;
+  } catch (e) { alert(e.message); }
+}
+
+async function listPartners() {
+  try {
+    const data = await api('GET', '/delivery-partners/available?area=Indiranagar');
+    if (data.length) deliveryPartnerId = data[0]._id;
+  } catch (e) { alert(e.message); }
+}
+
+async function assignPartner() {
+  try {
+    const data = await api('PUT', `/orders/${orderId}/assign`, { deliveryPartnerId });
+    document.getElementById('statusBadge').innerHTML = `<span class="badge bg-info badge-status">${data.status}</span>`;
+  } catch (e) { alert(e.message); }
+}
+
+async function setStatus(status) {
+  try {
+    const data = await api('PUT', `/orders/${orderId}/status`, { status });
+    document.getElementById('statusBadge').innerHTML = `<span class="badge bg-success badge-status">${data.status}</span>`;
+  } catch (e) { alert(e.message); }
+}
+
+async function getOrder() {
+  try {
+    const data = await api('GET', `/orders/${orderId}`);
+    document.getElementById('statusBadge').innerHTML = `<span class="badge bg-info badge-status">${data.status}</span>`;
+  } catch (e) { alert(e.message); }
+}
+</script>
+</body>
+</html>
